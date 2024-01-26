@@ -10,6 +10,7 @@ jobs:
       runs-on: ubuntu-22.04
       # 워크플로우에서 실행할 단계들을 정의합니다.
       steps:
+         # 구글 챗에 푸시를 보냅니다.
          - name: Google Chat Notification
            run: |
               COMMIT_MESSAGE="${{ github.event.head_commit.message }}"
