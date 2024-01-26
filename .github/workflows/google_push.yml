@@ -1,0 +1,55 @@
+# 워크플로우의 이름을 정의합니다. GitHub Actions 로그와 UI에서 이 이름이 표시됩니다.
+name: GitAction Google Chat application test
+# 이 워크플로우가 어떤 GitHub 이벤트에 의해 트리거될지 정의합니다.
+# 여기서는 'push' 이벤트와 'pull_request' 이벤트에 대해 워크플로우가 실행됩니다.
+on: [push, pull_request]
+# 워크플로우에서 실행할 작업을 정의합니다.
+jobs:
+   build:
+      # 워크플로우가 실행될 가상 환경을 지정합니다. 여기서는 Ubuntu 22.04를 사용합니다.
+      runs-on: ubuntu-22.04
+      # 워크플로우에서 실행할 단계들을 정의합니다.
+      steps:
+         - name: Google Chat Notification
+           run: |
+              COMMIT_MESSAGE="${{ github.event.head_commit.message }}"
+              COMMIT_URL="${{ github.event.head_commit.url }}"
+
+              curl --location --request POST "${{ secrets.WEBHOOK }}" \
+              --header 'Content-Type: application/json' \
+              --data-raw "{
+                  \"cardsV2\" : [{
+                      \"card\" : {
+                          \"header\": {
+                              \"title\": \"GitHub WebPush\",
+                              \"subtitle\": \"${COMMIT_MESSAGE}\",
+                              \"imageUrl\": \"https://avatars.githubusercontent.com/u/74635702?v=4\",
+                              \"imageType\": \"CIRCLE\"
+                          },
+                          \"sections\": [
+                              {
+                              \"header\": \"New Push in ${{ github.repository }}\",
+                              \"collapsible\": true,
+                              \"uncollapsibleWidgetsCount\": 1,
+                              \"widgets\": [
+                                  {
+                                  \"textParagraph\": {
+                                      \"text\": \"해당 <a href='${COMMIT_URL}'>Link</a> 를 확인해 주시기 바랍니다.\"
+                                    }
+                                  },
+                                  {
+                                  \"decoratedText\": {
+                                    \"icon\": {
+                                      \"knownIcon\": \"EMAIL\"
+                                    },
+                                    \"text\": \"Pushed by ${{ github.actor }}\",
+                                    \"bottomLabel\": \"GitAction_GoogleChat_WebPush\"
+                                  }
+                                }
+                              ]
+                              }
+
+                          ]
+                      }
+                  }]
+              }"
